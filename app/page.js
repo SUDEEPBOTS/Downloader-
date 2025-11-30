@@ -9,9 +9,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Your backend URL
-  const API_BASE = "https://web-production-3d6a.up.railway.app";
-
   // Fetch formats from backend
   const fetchInfo = async () => {
     if (!link) {
@@ -25,46 +22,74 @@ export default function Home() {
     setThumb("");
     setTitle("");
 
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 1000));
+
+    const res = await fetch(`/api/info?url=${encodeURIComponent(link)}`);
+    const data = await res.json();
+
+    setLoading(false);
+
+    if (!res.ok) {
+      setErrorMsg(data.error || "Video not found");
+      return;
+    }
+
+    setTitle(data.title);
+    setThumb(data.thumbnail);
+
+    // Add UI flags
+    const enhanced = [...data.audio, ...data.video].map((f) => ({
+      ...f,
+      downloading: false,
+      done: false,
+    }));
+
+    setFormats(enhanced);
+  };
+
+  // Download system
+  const download = async (videoUrl, formatId, index) => {
+    const updated = [...formats];
+
+    updated[index].downloading = true;
+    updated[index].done = false;
+    setFormats([...updated]);
+
+    const finalURL = `https://web-production-3d6a.up.railway.app/download?url=${encodeURIComponent(
+      videoUrl
+    )}&format_id=${formatId}`;
 
     try {
-      const res = await fetch(
-        `${API_BASE}/info?url=${encodeURIComponent(link)}`
-      );
+      await new Promise((r) => setTimeout(r, 400));
 
-      const data = await res.json();
-      setLoading(false);
+      // Open download instantly in Chrome
+      window.open(finalURL, "_blank");
 
-      if (!res.ok) {
-        setErrorMsg(data.detail || "Video not found");
-        return;
-      }
+      updated[index].downloading = false;
+      updated[index].done = true;
+      setFormats([...updated]);
 
-      setTitle(data.title);
-      setThumb(data.thumbnail);
-      setFormats([...data.audio, ...data.video]);
+      // Reset after 3 sec
+      setTimeout(() => {
+        updated[index].done = false;
+        setFormats([...updated]);
+      }, 3000);
     } catch (err) {
-      setLoading(false);
-      setErrorMsg("Server not responding");
+      updated[index].downloading = false;
+      setFormats([...updated]);
+      setErrorMsg("Download failed");
     }
   };
 
-  // Download redirect
-  const download = (f) => {
-    window.open(f.url, "_blank");
-  };
-
-  // Paste link
   const pasteFromClipboard = async () => {
     try {
       const text = await navigator.clipboard.readText();
       setLink(text);
     } catch (err) {
-      alert("Clipboard blocked!");
+      alert("Clipboard blocked");
     }
   };
 
-  // Clear
   const clearAll = () => {
     setLink("");
     setFormats([]);
@@ -75,12 +100,7 @@ export default function Home() {
 
   return (
     <main className="wrapper">
-
-      {errorMsg && (
-        <div className="popup">
-          ❌ {errorMsg}
-        </div>
-      )}
+      {errorMsg && <div className="popup">❌ {errorMsg}</div>}
 
       <div className="glass-box animated-fade">
         <h1 className="title">YouTube Downloader</h1>
@@ -124,9 +144,14 @@ export default function Home() {
               <button
                 key={i}
                 className="glass-btn small"
-                onClick={() => download(f)}
+                onClick={() => download(f.url, f.format_id, i)}
+                disabled={f.downloading}
               >
-                {f.height ? `${f.height}p` : "MP3"} ({f.ext})
+                {f.downloading
+                  ? "Downloading..."
+                  : f.done
+                  ? "Done ✓"
+                  : `${f.format} (${f.ext})`}
               </button>
             ))}
           </div>
