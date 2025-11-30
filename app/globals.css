@@ -152,10 +152,31 @@ body::before {
   animation: spin 0.9s linear infinite;
   box-shadow: 0 0 15px rgba(180,80,255,0.6);
 }
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 .loader p {
   color: #eee;
   margin-top: 10px;
+}
+.glass-btn.small {
+  transition: 0.3s ease;
+}
+
+.glass-btn.small:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.result h2 {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.thumb {
+  width: 260px;
+  border-radius: 10px;
+  margin: auto;
+  display: block;
 }
