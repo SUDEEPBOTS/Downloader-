@@ -8,8 +8,12 @@ export default function Home() {
   const [thumb, setThumb] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [downloading, setDownloading] = useState(false);
 
-  // Fetch formats from backend
+  // YOUR BACKEND
+  const API_BASE = "https://web-production-3d6a.up.railway.app";
+
+  // Fetch info
   const fetchInfo = async () => {
     if (!link) {
       setErrorMsg("Please enter a YouTube URL");
@@ -22,74 +26,58 @@ export default function Home() {
     setThumb("");
     setTitle("");
 
-    await new Promise((r) => setTimeout(r, 1000));
-
-    const res = await fetch(`/api/info?url=${encodeURIComponent(link)}`);
-    const data = await res.json();
-
-    setLoading(false);
-
-    if (!res.ok) {
-      setErrorMsg(data.error || "Video not found");
-      return;
-    }
-
-    setTitle(data.title);
-    setThumb(data.thumbnail);
-
-    // Add UI flags
-    const enhanced = [...data.audio, ...data.video].map((f) => ({
-      ...f,
-      downloading: false,
-      done: false,
-    }));
-
-    setFormats(enhanced);
-  };
-
-  // Download system
-  const download = async (videoUrl, formatId, index) => {
-    const updated = [...formats];
-
-    updated[index].downloading = true;
-    updated[index].done = false;
-    setFormats([...updated]);
-
-    const finalURL = `https://web-production-3d6a.up.railway.app/download?url=${encodeURIComponent(
-      videoUrl
-    )}&format_id=${formatId}`;
+    await new Promise((r) => setTimeout(r, 1500));
 
     try {
-      await new Promise((r) => setTimeout(r, 400));
+      const res = await fetch(
+        `${API_BASE}/info?url=${encodeURIComponent(link)}`
+      );
 
-      // Open download instantly in Chrome
-      window.open(finalURL, "_blank");
+      const data = await res.json();
+      setLoading(false);
 
-      updated[index].downloading = false;
-      updated[index].done = true;
-      setFormats([...updated]);
+      if (!res.ok) {
+        setErrorMsg(data.detail || "Video not found!");
+        return;
+      }
 
-      // Reset after 3 sec
-      setTimeout(() => {
-        updated[index].done = false;
-        setFormats([...updated]);
-      }, 3000);
+      setTitle(data.title);
+      setThumb(data.thumbnail);
+      setFormats([...data.audio, ...data.video]);
     } catch (err) {
-      updated[index].downloading = false;
-      setFormats([...updated]);
-      setErrorMsg("Download failed");
+      setLoading(false);
+      setErrorMsg("Backend not responding.");
     }
   };
 
+  // Proper download handler
+  const download = async (f) => {
+    setDownloading(true);
+
+    // delay for animation
+    await new Promise((r) => setTimeout(r, 1400));
+
+    window.open(
+      `${API_BASE}/download?url=${encodeURIComponent(
+        link
+      )}&format_id=${f.format_id}`,
+      "_blank"
+    );
+
+    setDownloading(false);
+  };
+
+  // Paste
   const pasteFromClipboard = async () => {
     try {
       const text = await navigator.clipboard.readText();
       setLink(text);
     } catch (err) {
-      alert("Clipboard blocked");
+      alert("Clipboard blocked!");
     }
   };
 
+  // Clear
   const clearAll = () => {
     setLink("");
     setFormats([]);
@@ -100,8 +88,11 @@ export default function Home() {
 
   return (
     <main className="wrapper">
+
+      {/* ERROR POPUP */}
       {errorMsg && <div className="popup">❌ {errorMsg}</div>}
 
+      {/* INPUT BOX */}
       <div className="glass-box animated-fade">
         <h1 className="title">YouTube Downloader</h1>
 
@@ -116,17 +107,16 @@ export default function Home() {
           <button className="glass-btn small" onClick={pasteFromClipboard}>
             Paste Link
           </button>
-
           <button className="glass-btn small" onClick={clearAll}>
             Clear
           </button>
-
           <button className="glass-btn" disabled={loading} onClick={fetchInfo}>
             {loading ? "Loading..." : "Fetch"}
           </button>
         </div>
       </div>
 
+      {/* FETCH LOADER */}
       {loading && (
         <div className="loader">
           <div className="spinner"></div>
@@ -134,6 +124,15 @@ export default function Home() {
         </div>
       )}
 
+      {/* DOWNLOAD LOADER */}
+      {downloading && (
+        <div className="loader">
+          <div className="spinner"></div>
+          <p>Starting download…</p>
+        </div>
+      )}
+
+      {/* RESULT */}
       {thumb && !loading && (
         <div className="result animated-fade">
           <img src={thumb} className="thumb" />
@@ -144,14 +143,9 @@ export default function Home() {
               <button
                 key={i}
                 className="glass-btn small"
-                onClick={() => download(f.url, f.format_id, i)}
-                disabled={f.downloading}
+                onClick={() => download(f)}
               >
-                {f.downloading
-                  ? "Downloading..."
-                  : f.done
-                  ? "Done ✓"
-                  : `${f.format} (${f.ext})`}
+                {f.height ? `${f.height}p` : `${f.abr}kbps`} ({f.ext})
               </button>
             ))}
           </div>
