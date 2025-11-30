@@ -9,43 +9,49 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Fetch formats (GET method)
+  // Your backend URL
+  const API_BASE = "https://web-production-3d6a.up.railway.app";
+
+  // Fetch formats from backend
   const fetchInfo = async () => {
     if (!link) {
       setErrorMsg("Please enter a YouTube URL");
       return;
     }
 
-    // reset
     setLoading(true);
     setErrorMsg("");
     setFormats([]);
     setThumb("");
     setTitle("");
 
-    // 2 sec loading delay for animation
     await new Promise((r) => setTimeout(r, 2000));
 
-    const res = await fetch(
-      `/api/info?url=${encodeURIComponent(link)}`
-    );
+    try {
+      const res = await fetch(
+        `${API_BASE}/info?url=${encodeURIComponent(link)}`
+      );
 
-    const data = await res.json();
-    setLoading(false);
+      const data = await res.json();
+      setLoading(false);
 
-    if (!res.ok) {
-      setErrorMsg(data.error || "Video not found");
-      return;
+      if (!res.ok) {
+        setErrorMsg(data.detail || "Video not found");
+        return;
+      }
+
+      setTitle(data.title);
+      setThumb(data.thumbnail);
+      setFormats([...data.audio, ...data.video]);
+    } catch (err) {
+      setLoading(false);
+      setErrorMsg("Server not responding");
     }
-
-    setTitle(data.title);
-    setThumb(data.thumbnail);
-    setFormats([...data.audio, ...data.video]);
   };
 
   // Download redirect
-  const download = async (url) => {
-    await fetch(`/api/download?url=${encodeURIComponent(url)}`);
+  const download = (f) => {
+    window.open(f.url, "_blank");
   };
 
   // Paste link
@@ -70,7 +76,6 @@ export default function Home() {
   return (
     <main className="wrapper">
 
-      {/* Error Popup */}
       {errorMsg && (
         <div className="popup">
           ❌ {errorMsg}
@@ -102,7 +107,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Loader */}
       {loading && (
         <div className="loader">
           <div className="spinner"></div>
@@ -120,9 +124,9 @@ export default function Home() {
               <button
                 key={i}
                 className="glass-btn small"
-                onClick={() => download(f.url)}
+                onClick={() => download(f)}
               >
-                {f.quality || "MP3"} ({f.format})
+                {f.height ? `${f.height}p` : "MP3"} ({f.ext})
               </button>
             ))}
           </div>
@@ -130,4 +134,4 @@ export default function Home() {
       )}
     </main>
   );
-        }
+}
