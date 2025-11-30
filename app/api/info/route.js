@@ -1,4 +1,4 @@
-Export const runtime = "nodejs";
+export const runtime = "nodejs"; // <-- CORRECT
 
 // -------- UNIVERSAL YOUTUBE ID EXTRACTOR -------- //
 function extractYouTubeID(url) {
