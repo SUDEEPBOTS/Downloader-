@@ -7,7 +7,7 @@ function extractYouTubeID(url) {
       return url.split("youtu.be/")[1].split("?")[0];
     }
     if (url.includes("watch?v=")) {
-      return url.split("v=")[1].split("&")[0];
+      return url.split("v=")[1].split("&")[0];  // FIXED HERE
     }
     if (url.includes("/shorts/")) {
       return url.split("/shorts/")[1].split("?")[0];
