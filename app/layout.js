@@ -1,3 +1,5 @@
+import "./globals.css";     // <<--- SABSE IMPORTANT LINE
+
 export const metadata = {
   title: "YouTube Downloader",
   description: "Fast YouTube video & audio downloader",
