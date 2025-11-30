@@ -17,16 +17,24 @@ function extractYouTubeID(url) {
   }
 }
 
-export async function POST(req) {
+export async function GET(req) {
   try {
-    const { url } = await req.json();
+    const { searchParams } = new URL(req.url);
+    const url = searchParams.get("url");
+
+    if (!url) {
+      return Response.json({ error: "URL missing" }, { status: 400 });
+    }
+
     const id = extractYouTubeID(url);
 
     if (!id) {
       return Response.json({ error: "Invalid YouTube URL" }, { status: 400 });
     }
 
+    // Fast & stable API
     const api = `https://api.supertune.xyz/ytdl?id=${id}`;
+
     const response = await fetch(api, { cache: "no-store" });
 
     if (!response.ok) {
@@ -34,10 +42,6 @@ export async function POST(req) {
     }
 
     const data = await response.json();
-
-    if (!data || !data.title) {
-      return Response.json({ error: "Video not found" }, { status: 404 });
-    }
 
     return Response.json({
       title: data.title,
