@@ -1,0 +1,115 @@
+body {
+  margin: 0;
+  height: 100vh;
+  background: url('/bg.jpg') no-repeat center center fixed;
+  background-size: cover;
+  font-family: "Poppins", sans-serif;
+  overflow-x: hidden;
+  color: white;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  z-index: -1;
+}
+
+.wrapper {
+  text-align: center;
+  padding: 30px;
+}
+
+/* Glass Card */
+.glass-box {
+  max-width: 500px;
+  margin: auto;
+  padding: 28px;
+  margin-top: 40px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 30px rgba(160, 50, 255, 0.25);
+  animation: fadeIn 0.8s ease-out;
+}
+
+.title {
+  font-size: 35px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  background: linear-gradient(90deg, #ba70ff, #72f5ff);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Glass Input */
+.glass-input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  font-size: 17px;
+  outline: none;
+  margin-bottom: 15px;
+  transition: 0.3s;
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.20);
+  box-shadow: 0 0 15px rgba(180, 80, 255, 0.6);
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Neon Glass Button */
+.glass-btn {
+  padding: 14px 26px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.14);
+  color: white;
+  cursor: pointer;
+  transition: 0.4s;
+  font-size: 17px;
+  box-shadow: 0 0 18px rgba(120, 0, 255, 0.3);
+  backdrop-filter: blur(20px);
+}
+
+.glass-btn:hover {
+  transform: scale(1.08);
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 0 35px rgba(170, 0, 255, 0.7);
+}
+
+.small {
+  padding: 10px 18px;
+  margin: 6px;
+  font-size: 14px;
+}
+
+.thumb {
+  width: 330px;
+  border-radius: 16px;
+  margin-top: 20px;
+  box-shadow: 0 0 25px rgba(150, 0, 255, 0.25),
+              0 0 10px rgba(0, 255, 200, 0.3);
+}
+
+.format-box {
+  margin-top: 20px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
