@@ -6,27 +6,46 @@ export default function Home() {
   const [formats, setFormats] = useState([]);
   const [title, setTitle] = useState("");
   const [thumb, setThumb] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  // Fetch formats from API
+  // Fetch formats (GET method)
   const fetchInfo = async () => {
-    if (!link) return;
-    const res = await fetch("/api/info", {
-      method: "POST",
-      body: JSON.stringify({ url: link })
-    });
+    if (!link) {
+      setErrorMsg("Please enter a YouTube URL");
+      return;
+    }
+
+    // reset
+    setLoading(true);
+    setErrorMsg("");
+    setFormats([]);
+    setThumb("");
+    setTitle("");
+
+    // 2 sec loading delay for animation
+    await new Promise((r) => setTimeout(r, 2000));
+
+    const res = await fetch(
+      `/api/info?url=${encodeURIComponent(link)}`
+    );
+
     const data = await res.json();
+    setLoading(false);
+
+    if (!res.ok) {
+      setErrorMsg(data.error || "Video not found");
+      return;
+    }
 
     setTitle(data.title);
     setThumb(data.thumbnail);
     setFormats([...data.audio, ...data.video]);
   };
 
-  // Redirect to download
+  // Download redirect
   const download = async (url) => {
-    await fetch("/api/download", {
-      method: "POST",
-      body: JSON.stringify({ downloadUrl: url })
-    });
+    await fetch(`/api/download?url=${encodeURIComponent(url)}`);
   };
 
   // Paste link
@@ -39,16 +58,24 @@ export default function Home() {
     }
   };
 
-  // Reset all
+  // Clear
   const clearAll = () => {
     setLink("");
     setFormats([]);
     setTitle("");
     setThumb("");
+    setErrorMsg("");
   };
 
   return (
     <main className="wrapper">
+
+      {/* Error Popup */}
+      {errorMsg && (
+        <div className="popup">
+          ❌ {errorMsg}
+        </div>
+      )}
 
       <div className="glass-box animated-fade">
         <h1 className="title">YouTube Downloader</h1>
@@ -69,13 +96,21 @@ export default function Home() {
             Clear
           </button>
 
-          <button className="glass-btn" onClick={fetchInfo}>
-            Fetch
+          <button className="glass-btn" disabled={loading} onClick={fetchInfo}>
+            {loading ? "Loading..." : "Fetch"}
           </button>
         </div>
       </div>
 
-      {thumb && (
+      {/* Loader */}
+      {loading && (
+        <div className="loader">
+          <div className="spinner"></div>
+          <p>Fetching video...</p>
+        </div>
+      )}
+
+      {thumb && !loading && (
         <div className="result animated-fade">
           <img src={thumb} className="thumb" />
           <h2>{title}</h2>
@@ -93,7 +128,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
     </main>
   );
-            }
+        }
