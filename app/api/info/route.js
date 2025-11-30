@@ -22,33 +22,34 @@ function extractYouTubeID(url) {
 
 export async function POST(req) {
   try {
-    const { url } = await req.json();
+    const body = await req.json();
+    const url = body.url;
     const id = extractYouTubeID(url);
 
     if (!id) {
-      return Response.json(
-        { error: "Invalid URL" },
-        { status: 400 }
-      );
+      return Response.json({ error: "Invalid URL" }, { status: 400 });
     }
 
     const api = `https://piped.video/streams/${id}`;
-    const data = await fetch(api).then((r) => r.json());
+    const res = await fetch(api);
 
-    if (!data || !data.title) {
-      return Response.json(
-        { error: "Failed to fetch video" },
-        { status: 500 }
-      );
+    if (!res.ok) {
+      return Response.json({ error: "Piped API error" }, { status: 500 });
     }
 
+    const data = await res.json();
+
     return Response.json({
-      title: data.title,
-      thumbnail: data.thumbnailUrl,
+      title: data.title || "",
+      thumbnail: data.thumbnailUrl || "",
       audio: data.audioStreams || [],
       video: data.videoStreams || [],
     });
+
   } catch (err) {
-    return Response.json({ error: "Server error" }, { status: 500 });
+    return Response.json(
+      { error: err.message || "Server error" },
+      { status: 500 }
+    );
   }
 }
